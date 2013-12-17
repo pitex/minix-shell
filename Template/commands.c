@@ -16,6 +16,17 @@ int m_kill(char*[]);
 int m_lenv(char*[]);
 int m_ls(char*[]);
 
+command_pair dispatch_table[]={
+    {"echo", &echo},
+    {"exit", &m_exit},
+    {"cd", &m_cd},
+    {"kill", &m_kill},
+    {"lenv", &m_lenv},
+    {"lls", &m_ls},
+    {NULL,NULL}
+};
+
+//	Checks if string can be converted to int
 int is_int(char *a)
 {
     int i;
@@ -32,6 +43,7 @@ int is_int(char *a)
     return 1;
 }
 
+//	Converts string to int
 int to_int(char *a)
 {
     int i;
@@ -47,16 +59,6 @@ int to_int(char *a)
     }
     return beg?-result:result;
 }
-
-command_pair dispatch_table[]={
-    {"echo", &echo},
-    {"exit", &m_exit},
-    {"cd", &m_cd},
-    {"kill", &m_kill},
-    {"lenv", &m_lenv},
-    {"lls", &m_ls},
-    {NULL,NULL}
-};
 
 int echo(argv)
 char * argv[];
