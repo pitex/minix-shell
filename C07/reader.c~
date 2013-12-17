@@ -1,0 +1,9 @@
+#include <unistd.h>
+#include <stat.h>
+#define PATH "mojpathdofifo"
+#define PATH2 "mojpathdofilea"
+
+int main(int argc, char * argv[])
+{
+	
+}

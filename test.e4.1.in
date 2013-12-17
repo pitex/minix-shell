@@ -1,0 +1,25 @@
+/bin/ls /var > test.e4.1.A
+/bin/ls /usr > test.e4.1.B
+/bin/ls /home > test.e4.1.C
+
+cat test.e4.1.A > test.e4.1.C
+cat test.e4.1.B >> test.e4.1.C
+
+/bin/ls /usr > test.e4.1.A
+cat < test.e4.1.A >> test.e4.1.D
+cat < test.e4.1.B >> test.e4.1.D
+
+sort < test.e4.1.D > test.e4.1.E
+
+echo ----------------- test.e4.1.A
+cat < test.e4.1.A
+echo ----------------- test.e4.1.B
+cat < test.e4.1.B
+echo ----------------- test.e4.1.C
+cat < test.e4.1.C
+echo ----------------- test.e4.1.D
+cat < test.e4.1.D
+echo ----------------- test.e4.1.E
+cat < test.e4.1.E
+
+rm test.e4.1.A test.e4.1.B test.e4.1.C test.e4.1.D test.e4.1.E

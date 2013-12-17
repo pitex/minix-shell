@@ -1,0 +1,26 @@
+Zaimplementuj następujący zestaw wywołań systemowych implementujących "schowek na liczbę". Każdy proces może spróbować odczytać liczbę ze schowka lub zapisać liczbę do schowka. 
+
+int store(int n) - zapisuje w schowku liczbę podaną w argumencie jeśli żadna liczba nie jest aktualnie zapisana. W przeciwnym przypadku zwraca -1 i ustawia errno na EBUSY.
+
+int retrieve(int *pn) -  jeśli aktualnie jest w schowku jakaś liczba to zostanie zapisana w (*pn) a schowek od tej chwili będzie pusty. W przypadku braku liczby w schowku zwraca -1 i ustawia errno na EGENERIC
+
+Kompilacja:
+
+Dodane funkcje proponuję zaimplementować w katalogu /usr/src/lib/other oraz odpowiednio zmodyfikować Makefile.
+Po kompilacji i zainstalowaniu
+	/usr/src/lib/make install
+będą częścią biblioteki libc.a i będą automatycznie linkowane do kompilowanych programów.
+
+Należy dodać plik nagłówkowy z deklaracjami powyższych funkcji. Instalacja plików nagłówkowych (kopiowanie /usr/src/include do /usr/include)
+	/usr/src/include/make install
+
+Rekompilacja i instalacja obrazu systemu (konieczna w przypadku modyfikacji jądra lub procesów systemowych):
+	/usr/src/tools/make install
+
+
+zmienione w servers/pm/:
+table.c
+proto.h
+glo.h
+misc.c
++storage.c w C09

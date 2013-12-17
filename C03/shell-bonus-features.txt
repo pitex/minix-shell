@@ -1,0 +1,4 @@
+1. Zmiana prompta na '*' jeśli ostatnia niepusta komenda w foreground zakończyła się niepowodzeniem.
+
+2. Komenda '. FILENAME' która wykonuje polecenia z pliku FILENAME w bieżącym procesie shella po czym kontynuuje wykonywanie poleceń ze standardowego wejścia. W wersji light dopuszczamy tylko jedno zagnieżdżenie.
+

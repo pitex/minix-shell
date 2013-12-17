@@ -1,0 +1,9 @@
+Zaimplementuj w Minix'ie funkcje opakowujące wywołania systemowe fork, getpid, getppid, open zgodnie z dostarczonymi szablonami.
+
+Przydadzą się kody z poniższych katalogów:
+src/include
+src/lib
+
+Implementacje syscalli po stronie serwerów (to się nie musi przydać):
+src/servers/pm
+src/servers/fs

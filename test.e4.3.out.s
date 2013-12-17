@@ -1,0 +1,34 @@
+bin
+bin
+bin
+games
+games
+games
+include
+include
+include
+lib
+lib
+lib
+lib32
+lib32
+lib32
+local
+local
+local
+NX
+NX
+NX
+sbin
+sbin
+sbin
+share
+share
+share
+src
+src
+src
+------------------------
+     10      10      52
+------------------------
+     10      10      52

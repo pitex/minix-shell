@@ -1,0 +1,22 @@
+#include "pm.h"
+#include <minix/callnr.h>
+#include <signal.h>
+#include "mproc.h"
+#include "param.h"
+
+int stored_number;
+int is_stored = 0;
+
+int do_store() {
+	if (is_stored) return(EBUSY);
+	is_stored = 1;
+	stored_number = m_in.m1_i1;
+	return OK;
+}
+
+int do_retrieve() {
+	if (!is_stored) return(EGENERIC);
+	is_stored = 0;
+	mp.m1_i1 = stored_number;
+	return OK;
+}

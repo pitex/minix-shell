@@ -1,0 +1,80 @@
+Etap 3. - komendy shella
+
+	4. Zanim wykonamy polecenia jako program sprawdzamy czy nie jest to polecnie shella. Polecenia shella znajdują się w tabeli dispatch_table (commands.c). Wpis składa się z nazwy polecenia i wskaźnika do funkcji realizującej polecenie. Argumentem funkcji jest tablica argumentów analogiczna do argv. Należy zaimplementować następujące polecenia: 
+	- exit 	- kończy proces shella
+	- cd [path]	- zmienia bieżący katalog na wskazany
+	- kill [ -signal ] pid - wysyła sygnał signum do procesu/grupy pid
+	- lenv - wypisuje na standardowe wyjście zmienne środowiskowe procesu shella
+	- ls - wypisje nazwy plików w bieżącym katalogu (analogicznie do 'ls -1' bez żadnych opcji)
+
+Przykład sesji:
+sleep 10000 &
+sleep 10001 &
+./mshell
+> pwd
+/home/dude
+> cd /etc
+> pwd
+/etc
+> cd ../home
+> pwd
+/home
+> ls
+ast
+bin
+dude
+>cd /
+> ls
+bin
+boot
+dev
+etc
+home
+lib
+mnt
+root
+sbin
+tmp
+usr
+var
+> cd dude
+>pwd
+/home/dude
+> cd ../../usr/src/etc
+> pwd 
+/usr/src/etc
+> ps
+  PID TTY  TIME CMD
+  ...
+  405  c2  0:00 sleep 10000
+  406  c2  0:00 sleep 10001
+  407  c2  0:00 ./mshell
+  413  c2  0:00 ps
+> kill -15 406 
+> ps
+  PID TTY  TIME CMD
+  ...
+  405  c2  0:00 sleep 10000
+  407  c2  0:00 ./mshell
+  419  c2  0:00 ps
+> kill 405
+> ps
+  PID TTY  TIME CMD
+  ...
+  407  c2  0:00 ./mshell
+  421  c2  0:00 ps
+> lenv
+USER=dude
+HOME=/home/dude
+PAGER=more
+LOGNAME=dude
+TERM=minix
+PATH=/home/dude/bin:/usr/local/bin:/bin:/usr/bin
+SHELL=/bin/sh
+TZ=GMT0
+EDITOR=vi
+> exit
+
+Syscall checklist: exit, chdir, kill, readdir, opendir/fdopendir, closedir
+
+

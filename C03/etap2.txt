@@ -1,0 +1,21 @@
+Etap 2. - wejście z pliku
+
+Zmiany w stosunku do E1:
+	1. Wypisujemy prompt na stdin tylko jeśli stdin odpowiada specjalnemy urządzeniu znakowemu (man fstat).
+	2. Wczytując linię z stdin musimy się liczyć z tym że zostanie wczytanych wiele linii, oraz z tym że ostatnia z nich może nie być wczytana w całości. Należy uwzględnić przypadek że w jednym odczycie zostanie wczytana tylko część linii.
+	3. 4. analogicznie jak w E1 wykonaj pierwszą z komend z każdej z wczytanych linii.
+
+Testy:
+./mshell < test.e2.1.in > test.e2.1.out.m
+sh < test.e2.1.in > test.e2.1.out.s
+diff test.e2.1.out.m test.e2.1.out.s
+
+./splitter < test.e2.1.in | ./mshell > test.e2.1.out.m
+diff test.e2.1.out.m test.e2.1.out.s
+
+./mshell < test.e2.2.in > test.e2.2.out.m
+sh < test.e2.2.in > test.e2.2.out.s
+diff test.e2.2.out.m test.e2.2.out.s
+
+Syscall checklist: fstat
+
