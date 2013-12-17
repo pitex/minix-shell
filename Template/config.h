@@ -6,7 +6,7 @@
 
 #define RERROR_COM "Read error.\n"
 
-#define MAX_COMMANDS 10
+#define MAX_COMMANDS 30
 #define MAX_ARGS 10
 
 #define PROMPT "> "

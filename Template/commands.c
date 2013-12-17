@@ -18,12 +18,12 @@ int m_ls(char*[]);
 
 int is_int(char *a)
 {
+	int i;
 	int length = strlen(a);
 	int beg = 0;
 	int result = 0;
 	beg+=(a[0]=='-');
 	
-	int i;
 	for (i=beg; i<length; i++)
 	{
 		if (a[i]>'9' || a[i]<'0') return 0;
@@ -34,12 +34,12 @@ int is_int(char *a)
 
 int to_int(char *a)
 {
+	int i;
 	int length = strlen(a);
 	int beg = 0;
 	int result = 0;
 	beg+=(a[0]=='-');
 	
-	int i;
 	for (i=beg; i<length; i++)
 	{
 		result*=10;
@@ -73,10 +73,11 @@ char * argv[];
 int m_exit(argv)
 char * argv[];
 {
+	int i;
+	int id = 0;
+
 	if (argv[1])
 	{
-		int i;
-		int id = 0;
 		if (!is_int(argv[1]))
 		{
 			printf("mshell: exit: %s: numeric argument required\n",argv[0]);
@@ -129,6 +130,7 @@ char * argv[];
 	{
 		kill(to_int(argv[2]),to_int(argv[1]));
 	}
+	fflush(stdout);
 	
 	return 0;
 }
@@ -142,18 +144,20 @@ char * argv[];
 	for(current = environ; *current; current++) {
         printf("%s\n",*current);
     }
+	fflush(stdout);
 }
 
 int m_ls(argv)
 char * argv[];
 {
 	char dir_name[1024];
+	struct dirent *file;
+
 	getcwd(dir_name,1024);
 
 	DIR* cur_dir = opendir(dir_name);
 	if (cur_dir=opendir(dir_name))
 	{
-		struct dirent *file;
 		while (file = readdir(cur_dir))
 		{
 			if (file->d_name[0]!='.')
@@ -163,4 +167,5 @@ char * argv[];
 		}
 		closedir(cur_dir);
 	}
+	fflush(stdout);
 }
