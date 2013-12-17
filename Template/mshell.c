@@ -60,15 +60,15 @@ int read_input() {
 
 int equals(char * a, char * b) {
     int i;
-	int size_a,size_b;
-	size_a = strlen(a);size_b = strlen(b);
-	if (size_a!=size_b) return false;
-	
-	for (i=0; i<size_a; i++) {
-		if (a[i]!=b[i]) return false;
-	}
-	
-	return true;
+    int size_a,size_b;
+    size_a = strlen(a);size_b = strlen(b);
+    if (size_a!=size_b) return false;
+    
+    for (i=0; i<size_a; i++) {
+        if (a[i]!=b[i]) return false;
+    }
+    
+    return true;
 }
 
 void change_input(char * path) {
@@ -90,17 +90,17 @@ void change_output(char * path, int append) {
 }
 
 int shell_command(command_s command) {
-	int i=0;
+    int i=0;
     int stdout_copy;
 
-	while (dispatch_table[i].name) {
-		if (equals(dispatch_table[i].name,command.argv[0])) {
+    while (dispatch_table[i].name) {
+        if (equals(dispatch_table[i].name,command.argv[0])) {
             if (equals(command.argv[0],"lenv") && command.out_file_name) {
                 stdout_copy = dup(STDOUT_FILENO);
                 change_output(command.out_file_name,command.append_mode);
             }
 
-			dispatch_table[i].fun(command.argv);
+            dispatch_table[i].fun(command.argv);
 
             if (equals(command.argv[0],"lenv") && command.out_file_name) {
                 close(STDOUT_FILENO);
@@ -108,12 +108,12 @@ int shell_command(command_s command) {
                 close(stdout_copy);
             }
 
-			return true;
-		}
-		i++;
-	}
-	
-	return false;
+            return true;
+        }
+        i++;
+    }
+    
+    return false;
 }
 
 void execute_line() {
@@ -130,59 +130,59 @@ void execute_line() {
     }
     
     if (shell_command(commands[0])) {
-    	return;
+        return;
     }
     
     while(commands[i].argv) {
-    	if (commands[i+1].argv)
-    	{
-    		pipe(pipe_fd);
+        if (commands[i+1].argv)
+        {
+            pipe(pipe_fd);
             write_to = pipe_fd[WRITE_END];
-    	}
+        }
         
-		if (!(pid = fork())) {
-			if (write_to != -1) {
-				dup2(write_to,STDOUT_FILENO);
-				close(write_to);
+        if (!(pid = fork())) {
+            if (write_to != -1) {
+                dup2(write_to,STDOUT_FILENO);
+                close(write_to);
                 close(pipe_fd[READ_END]);
-			}
-			if (read_from != -1) {
-				dup2(read_from,STDIN_FILENO);
-				close(read_from);
+            }
+            if (read_from != -1) {
+                dup2(read_from,STDIN_FILENO);
+                close(read_from);
                 close(pipe_fd[WRITE_END]);
-			}
-			
-			if (commands[i].in_file_name) {
-				change_input(commands[i].in_file_name);
-			}
-			
-			if (commands[i].out_file_name) {
-				change_output(commands[i].out_file_name, commands[i].append_mode);
-			}
-			
-		    if (execvp(commands[i].argv[0], commands[i].argv) == fail) {
-		        exit(EXIT_FAILURE);
-		    }
-		} else if (pid > 0) {
-		    if (write_to != -1) close(write_to);
-		    if (read_from != -1) close(read_from);
-		    
-		    children_pids[i] = pid;
-		}
-		
+            }
+            
+            if (commands[i].in_file_name) {
+                change_input(commands[i].in_file_name);
+            }
+            
+            if (commands[i].out_file_name) {
+                change_output(commands[i].out_file_name, commands[i].append_mode);
+            }
+            
+            if (execvp(commands[i].argv[0], commands[i].argv) == fail) {
+                exit(EXIT_FAILURE);
+            }
+        } else if (pid > 0) {
+            if (write_to != -1) close(write_to);
+            if (read_from != -1) close(read_from);
+            
+            children_pids[i] = pid;
+        }
+        
         read_from = pipe_fd[READ_END];
         write_to = -1;
-		
-		i++;
+        
+        i++;
     }
 
     for (j=0; j<i; j++) {
-    	waitpid(children_pids[j],NULL,0);
+        waitpid(children_pids[j],NULL,0);
     }
 }
 
 void handle_input(int l) {
-	int i;
+    int i;
     for (i=0; i<l; i++) {
         if (input_buffer[buf_end + i] == '\n') {
             input_buffer[buf_end + i] = '\0';
@@ -220,6 +220,6 @@ char* argv[];
         handle_input(input_length);
     }
     
-	return 0;
+    return 0;
 }
 
