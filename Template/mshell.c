@@ -132,6 +132,7 @@ void execute_line() {
 	int write_to = -1;
 	int read_from = -1;
 	int pid;
+	int do_in_background = in_background(input_buffer+buf_begin);
 	command_s* commands = split_commands(input_buffer+buf_begin);
 
 	//  If there are no commands
@@ -140,7 +141,7 @@ void execute_line() {
 	}
 	
 	//  If it is shell command
-	if (shell_command(commands[0])) {
+	if (!do_in_background && shell_command(commands[0])) {
 		return;
 	}
 	
@@ -196,8 +197,10 @@ void execute_line() {
 	}
 
 	//  Wait for children to finish
-	for (j=0; j<i; j++) {
-		waitpid(children_pids[j],NULL,0);
+	if (!do_in_background) {
+		for (j=0; j<i; j++) {
+			waitpid(children_pids[j],NULL,0);
+		}
 	}
 }
 

@@ -130,13 +130,33 @@ char * argv[];
 int m_cd(argv)
 char * argv[];
 {
-	if (argv[1])
-	{
-		chdir(argv[1]);
-	}
-	else
-	{
-		chdir(getenv("HOME"));
+	char path[1024];
+
+	getcwd(path,1024);
+
+	if (argv[1]) {
+		//	~ case:
+		if (argv[1][0] == '~') {
+			chdir(getenv("HOME"));
+			if (strlen(argv[1])>1) {
+				//	if there is someting more than ~
+				if (argv[1][1] != '/' || (strlen(argv[1])>2 && chdir(argv[1]+2) != 0)) {
+					//	if next char after ~ is not / or there is no such path
+					write_string("mshell: cd: ");
+					write_string(argv[1]);
+					write_string(": No such file or directory\n");
+					chdir(path);
+				}
+			}
+		} else if (chdir(argv[1])!=0) {
+			write_string("mshell: cd: ");
+			write_string(argv[1]);
+			write_string(": No such file or directory\n");
+		}
+	} else if (chdir(getenv("HOME")) != 0) {
+		write_string("mshell: cd: ");
+		write_string(argv[1]);
+		write_string(": No such file or directory\n");
 	}
 	return 0;
 }
@@ -152,11 +172,11 @@ char * argv[];
 	}
 	if (!argv[2])
 	{
-		kill(to_int(argv[1]),0);
+		kill(to_int(argv[1]),15);
 	}
 	else
 	{
-		kill(to_int(argv[2]),to_int(argv[1]));
+		kill(to_int(argv[2]),-1*to_int(argv[1]));
 	}
 	fflush(stdout);
 	
