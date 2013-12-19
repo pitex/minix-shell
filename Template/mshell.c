@@ -33,7 +33,8 @@ int in_foreground;
 int left_in_foreground;
 struct sigaction def_sigint_act;
 struct sigaction def_sigchld_act;
-sigset_t wait_mask; 
+sigset_t wait_mask;
+sigset_t block_mask;
 
 /*  Checks if input is special character input	*/
 void check_input_type() {
@@ -54,9 +55,15 @@ int display_prompt() {
 		for (i=0; i<background_saved; i++) {
 			write_string("Process ");
 			write_int(bckg_pid[i]);
-			write_string(" ended with status ");
-			write_int(status[i]);
-			write_string("\n");
+			if (WIFSIGNALED(status[i])) {
+				write_string(" killed by signal ");
+				write_int(WTERMSIG(status[i]));
+				write_string("\n");
+			} else {
+				write_string(" ended with status ");
+				write_int(status[i]);
+				write_string("\n");
+			}
 		}
 		background_saved = 0;
 		return write(1,PROMPT,PROMPT_LENGTH);
@@ -175,6 +182,9 @@ void execute_line() {
 		return;
 	}
 	
+	/*	Block incoming SIGCHLD for now	*/
+	sigprocmask(SIG_BLOCK, &block_mask, NULL);
+
 	/*  Go through commands	*/
 	for(i=0; commands[i].argv != NULL; i++) {
 		/*  If there is a pipe after command, get ready to redirect output	*/
@@ -192,6 +202,9 @@ void execute_line() {
 			/*	Restore default SIGCHLD handling and disable signal forwarding from parent	*/
 			if (do_in_background) {
 				setsid();
+			} else {
+				/*	We don't really need it now, do we?	*/
+				sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 			}
 
 			/*  Redirect output if needed	*/
@@ -237,10 +250,16 @@ void execute_line() {
 	/*  Wait for children to finish	*/
 	if (!do_in_background) {
 		in_foreground = left_in_foreground = i;
+
+		/*	Gonna catch'em all	*/
 		while (left_in_foreground) {
 			sigsuspend(&wait_mask);
 		}
 	}
+	in_foreground = 0;
+
+	/*	BRING THEM ON!	*/
+	sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 }
 
 /*  Decide what to do with read input	*/
@@ -270,22 +289,24 @@ void my_sigint_handler(int a) {
 void my_sigchld_handler(int a) {
 	int pid;
 	int i;
+	int sts;
 
 	/*	get pid number of finished child	*/
-	pid = waitpid(-1, NULL, WNOHANG);
+	while ((pid = waitpid(-1, &sts, WNOHANG))>0) {//write_string("GOT ONE!\n");
 
-	/*	chech if foreground child was finished	*/
-	for (i=0; i<in_foreground; i++) {
-		if (children_pids[i] == pid) {
-			left_in_foreground--;
-			return;
+		/*	chech if foreground child was finished	*/
+		for (i=0; i<in_foreground; i++) {
+			if (children_pids[i] == pid) {
+				left_in_foreground--;
+				return;
+			}
 		}
-	}
 
-	/*	save iformation about background child finished	*/
-	if (background_saved < MAX_COMMANDS) {
-		status[background_saved] = a;
-		bckg_pid[background_saved++] = pid;
+		/*	save iformation about background child finished	*/
+		if (background_saved < MAX_COMMANDS) {
+			status[background_saved] = sts;
+			bckg_pid[background_saved++] = pid;
+		}
 	}
 }
 
@@ -294,11 +315,7 @@ void set_hadlers() {
 	struct sigaction new_sigint_act;
 	struct sigaction new_sidchld_act;
 
-	sigfillset(&new_sigint_act.sa_mask);
 	new_sigint_act.sa_handler = my_sigint_handler;
-	new_sigint_act.sa_flags = 0;
-
-	sigemptyset(&new_sidchld_act.sa_mask);
 	new_sidchld_act.sa_handler = my_sigchld_handler;
 
 	sigaction(SIGINT, &new_sigint_act, &def_sigint_act);
@@ -309,6 +326,10 @@ void set_hadlers() {
 void init() {
 	/*	prepare mask for waiting	*/
 	sigprocmask(SIG_BLOCK, NULL, &wait_mask);
+
+	/*	prepare mask for blocking sigchld	*/
+	sigemptyset(&block_mask);
+	sigaddset(&block_mask, SIGCHLD);
 }
 
 int main(argc, argv)
@@ -328,13 +349,19 @@ char* argv[];
 		if (display_prompt() == fail) {
 			continue;
 		}
+
+		sigprocmask(SIG_BLOCK, &block_mask, NULL);
 		/*  If there is nothing more to read, finish	*/
 		if ((input_length = read_input()) == 0) {
 			break;
 		}
+		sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
+
 		/*  If you can't read due to interruption, try again! elsewise just give up	*/
 		if (input_length < 0) {
-			if (errno == EINTR) continue;
+			if (errno == EINTR) {
+				continue;
+			}
 			exit(EXIT_FAILURE);
 		}
 		/*  What to do now?	*/
