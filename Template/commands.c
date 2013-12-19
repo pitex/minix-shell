@@ -75,6 +75,30 @@ void write_string(char * string) {
 	}
 }
 
+void write_int(int a) {
+	int p;
+	char c[2];
+
+	p = 1;
+	c[1] = '\0';
+
+	if (a < 0) {
+		c[0] = '-';
+		write_string(c);
+		a*=-1;
+	}
+
+	while (p * 10 <= a) {
+		p *= 10;
+	}
+
+	while (p) {
+		c[0] = '0' + (a/p)%10;
+		write_string(c);
+		p/=10;
+	}
+}
+
 int echo(argv)
 char * argv[];
 {
