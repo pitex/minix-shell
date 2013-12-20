@@ -256,7 +256,7 @@ void execute_line() {
 			sigsuspend(&wait_mask);
 		}
 	}
-	in_foreground = 0;
+	in_foreground = left_in_foreground = 0;
 
 	/*	BRING THEM ON!	*/
 	sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
@@ -290,20 +290,23 @@ void my_sigchld_handler(int a) {
 	int pid;
 	int i;
 	int sts;
+	int is_bck;
 
 	/*	get pid number of finished child	*/
-	while ((pid = waitpid(-1, &sts, WNOHANG))>0) {//write_string("GOT ONE!\n");
-
+	while ((pid = waitpid(-1, &sts, WNOHANG))>0) {
+		is_bck = true;
+	
 		/*	chech if foreground child was finished	*/
 		for (i=0; i<in_foreground; i++) {
 			if (children_pids[i] == pid) {
+				is_bck = false;
 				left_in_foreground--;
-				return;
+				break;
 			}
 		}
 
 		/*	save iformation about background child finished	*/
-		if (background_saved < MAX_COMMANDS) {
+		if (is_bck && background_saved < MAX_COMMANDS) {
 			status[background_saved] = sts;
 			bckg_pid[background_saved++] = pid;
 		}
@@ -313,13 +316,16 @@ void my_sigchld_handler(int a) {
 /*	for handling ctrl-c and SIGCHLD	*/
 void set_hadlers() {
 	struct sigaction new_sigint_act;
-	struct sigaction new_sidchld_act;
+	struct sigaction new_sigchld_act;
 
 	new_sigint_act.sa_handler = my_sigint_handler;
-	new_sidchld_act.sa_handler = my_sigchld_handler;
+	new_sigchld_act.sa_handler = my_sigchld_handler;
+	
+	sigfillset(&new_sigint_act.sa_mask);
+	sigfillset(&new_sigchld_act.sa_mask);
 
 	sigaction(SIGINT, &new_sigint_act, &def_sigint_act);
-	sigaction(SIGCHLD, &new_sidchld_act, &def_sigchld_act);
+	sigaction(SIGCHLD, &new_sigchld_act, &def_sigchld_act);
 }
 
 /*	initialize variables	*/
@@ -337,7 +343,9 @@ int argc;
 char* argv[];
 {
 	int input_length;
+	int you_no_print_prompt;
 
+	you_no_print_prompt = false;
 	init();
 	
 	check_input_type();
@@ -346,20 +354,23 @@ char* argv[];
 
 	while (true) {
 		
-		if (display_prompt() == fail) {
-			continue;
+		if (!you_no_print_prompt) {
+			if (display_prompt() == fail) {
+				continue;
+			}
 		}
+		
+		you_no_print_prompt = false;
 
-		sigprocmask(SIG_BLOCK, &block_mask, NULL);
 		/*  If there is nothing more to read, finish	*/
 		if ((input_length = read_input()) == 0) {
 			break;
 		}
-		sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 
 		/*  If you can't read due to interruption, try again! elsewise just give up	*/
 		if (input_length < 0) {
 			if (errno == EINTR) {
+				you_no_print_prompt = true;
 				continue;
 			}
 			exit(EXIT_FAILURE);
