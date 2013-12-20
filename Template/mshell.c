@@ -195,17 +195,17 @@ void execute_line() {
 		}
 		
 		if (!(pid = fork())) {
-			/*	Restore default signal handling	*/
-			sigaction(SIGINT, &def_sigint_act, NULL);
-			sigaction(SIGCHLD, &def_sigchld_act, NULL);
-
 			/*	Restore default SIGCHLD handling and disable signal forwarding from parent	*/
 			if (do_in_background) {
 				setsid();
-			} else {
-				/*	We don't really need it now, do we?	*/
-				sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 			}
+			
+			/*	Restore default signal handling	*/
+			sigaction(SIGINT, &def_sigint_act, NULL);
+			sigaction(SIGCHLD, &def_sigchld_act, NULL);
+			
+			/*	We don't really need it now, do we?	*/
+			sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 
 			/*  Redirect output if needed	*/
 			if (write_to != -1) {
@@ -318,7 +318,7 @@ void set_hadlers() {
 	struct sigaction new_sigint_act;
 	struct sigaction new_sigchld_act;
 
-	new_sigint_act.sa_handler = my_sigint_handler;
+	new_sigint_act.sa_handler = SIG_IGN;
 	new_sigchld_act.sa_handler = my_sigchld_handler;
 	
 	sigfillset(&new_sigint_act.sa_mask);

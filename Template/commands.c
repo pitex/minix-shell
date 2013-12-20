@@ -26,14 +26,18 @@ command_pair dispatch_table[]={
 	{NULL,NULL}
 };
 
-//	Checks if string can be converted to int
+/*	Checks if string can be converted to int	*/
 int is_int(char *a)
 {
 	int i;
-	int length = strlen(a);
-	int beg = 0;
-	int result = 0;
+	int length;
+	int beg;
+	int result;
+	
+	beg = 0;
 	beg+=(a[0]=='-');
+	result = 0;
+	length = strlen(a);
 	
 	for (i=beg; i<length; i++)
 	{
@@ -43,14 +47,18 @@ int is_int(char *a)
 	return 1;
 }
 
-//	Converts string to int
+/*	Converts string to int	*/
 int to_int(char *a)
 {
 	int i;
-	int length = strlen(a);
-	int beg = 0;
-	int result = 0;
+	int length;
+	int beg;
+	int result;
+	
+	beg = 0;
 	beg+=(a[0]=='-');
+	result = 0;
+	length = strlen(a);
 	
 	for (i=beg; i<length; i++)
 	{
@@ -62,9 +70,11 @@ int to_int(char *a)
 
 void write_string(char * string) {
 	int temp;
-	int printed = 0;
+	int printed;
 	int size = strlen(string);
 	char * to_print = string;
+
+	printed = 0;
 
 	while (printed<size) {
 		temp = write(STDOUT_FILENO,to_print,size-printed);
@@ -102,15 +112,16 @@ void write_int(int a) {
 int echo(argv)
 char * argv[];
 {
-	int i =1;
-	if (argv[i]) write_string(argv[i++]);//printf("%s", argv[i++]);
+	int i;
+	
+	i = 1;
+	
+	if (argv[i]) write_string(argv[i++]);
 	while  (argv[i]){
 		write_string(" ");
 		write_string(argv[i++]);
-		// printf(" %s", argv[i++]);
 	}
 	write_string("\n");
-	// printf("\n");
 	fflush(stdout);
 	return 0;
 }
@@ -119,7 +130,9 @@ int m_exit(argv)
 char * argv[];
 {
 	int i;
-	int id = 0;
+	int id;
+	
+	id = 0;
 
 	if (argv[1])
 	{
@@ -128,7 +141,6 @@ char * argv[];
 			write_string("mshell: exit: ");
 			write_string(argv[0]);
 			write_string(": numeric argument required\n");
-			// printf("mshell: exit: %s: numeric argument required\n",argv[0]);
 			exit(255);
 		}
 		
@@ -138,7 +150,6 @@ char * argv[];
 			write_string("mshell: exit: Illegal number: ");
 			write_string(argv[1]);
 			write_string("\n");
-			// printf("mshell: exit: Illegal number: %d\n",id);
 			return -1;
 		}
 		exit(id);
@@ -159,13 +170,13 @@ char * argv[];
 	getcwd(path,1024);
 
 	if (argv[1]) {
-		//	~ case:
+		/*	~ case:	*/
 		if (argv[1][0] == '~') {
 			chdir(getenv("HOME"));
 			if (strlen(argv[1])>1) {
-				//	if there is someting more than ~
+				/*	if there is someting more than ~	*/
 				if (argv[1][1] != '/' || (strlen(argv[1])>2 && chdir(argv[1]+2) != 0)) {
-					//	if next char after ~ is not / or there is no such path
+					/*	if next char after ~ is not / or there is no such path	*/
 					write_string("mshell: cd: ");
 					write_string(argv[1]);
 					write_string(": No such file or directory\n");
@@ -191,7 +202,6 @@ char * argv[];
 	if (!argv[1])
 	{
 		write_string("kill: usage: kill [-signal] pid\n");
-		// printf("kill: usage: kill [-signal] pid");
 		return -1;
 	}
 	if (!argv[2])
@@ -213,10 +223,10 @@ int m_lenv(argv)
 char * argv[];
 {
 	char **current;
+	
 	for(current = environ; *current; current++) {
 		write_string(*current);
 		write_string("\n");
-		// printf("%s\n",*current);
 	}
 	fflush(stdout);
 }
@@ -226,10 +236,11 @@ char * argv[];
 {
 	char dir_name[1024];
 	struct dirent *file;
+	DIR* cur_dir;
 
 	getcwd(dir_name,1024);
-
-	DIR* cur_dir = opendir(dir_name);
+	cur_dir = opendir(dir_name);
+	
 	if (cur_dir=opendir(dir_name))
 	{
 		while (file = readdir(cur_dir))
@@ -238,7 +249,6 @@ char * argv[];
 			{
 				write_string(file->d_name);
 				write_string("\n");
-				// printf("%s\n",file->d_name);
 			}
 		}
 		closedir(cur_dir);

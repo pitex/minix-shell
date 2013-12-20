@@ -1,7 +1,6 @@
 
 OBJECTS=mshell.o commands.o cparse.o
 HEADERS=commands.h cparse.h config.h
-CFLAGS= -pedantic -ansi -std=gnu89
 
 NAME=mshell
 
