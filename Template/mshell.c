@@ -299,7 +299,9 @@ void execute_line() {
 		while (left_in_foreground) {
 			/*sigsuspend(&wait_mask);*/
 			pid = waitpid(-1,&sts,0);
-			check_pid(pid,sts);
+			if (pid != -1) {
+				check_pid(pid,sts);
+			}
 		}
 	}
 	in_foreground = left_in_foreground = 0;
