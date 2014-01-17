@@ -33,6 +33,8 @@ int in_foreground;
 int left_in_foreground;
 struct sigaction def_sigint_act;
 struct sigaction def_sigchld_act;
+struct sigaction new_sigint_act;
+struct sigaction new_sigchld_act;
 sigset_t wait_mask;
 sigset_t block_mask;
 
@@ -315,9 +317,6 @@ void my_sigchld_handler(int a) {
 
 /*	for handling ctrl-c and SIGCHLD	*/
 void set_hadlers() {
-	struct sigaction new_sigint_act;
-	struct sigaction new_sigchld_act;
-
 	new_sigint_act.sa_handler = SIG_IGN;
 	new_sigchld_act.sa_handler = my_sigchld_handler;
 	
