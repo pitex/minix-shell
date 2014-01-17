@@ -36,39 +36,6 @@ struct sigaction def_sigchld_act;
 sigset_t wait_mask;
 sigset_t block_mask;
 
-/*	handle pid after wait	*/
-void check_pid(int pid, int sts) {
-	int i;
-	int is_bck;
-
-	/*	get pid number of finished child	*/
-	is_bck = true;
-
-	/*	chech if foreground child was finished	*/
-	for (i=0; i<in_foreground; i++) {
-		if (children_pids[i] == pid) {
-			is_bck = false;
-			left_in_foreground--;
-			break;
-		}
-	}
-
-	/*	save iformation about background child finished	*/
-	if (is_bck && background_saved < MAX_COMMANDS) {
-		status[background_saved] = sts;
-		bckg_pid[background_saved++] = pid;
-	}
-}
-
-void wait_for_children() {
-	int pid;
-	int sts;
-
-	while ((pid = waitpid(-1, &sts, WNOHANG))>0) {
-		check_pid(pid,sts);
-	}	
-}
-
 /*  Checks if input is special character input	*/
 void check_input_type() {
 	struct stat file_stat;
@@ -83,10 +50,6 @@ void check_input_type() {
 /*  Displays prompt	*/
 int display_prompt() {
 	int i;
-		
-	wait_for_children();
-	
-	sigprocmask(SIG_BLOCK, &block_mask, NULL);
 
 	if (print_prompt) {
 		for (i=0; i<background_saved; i++) {
@@ -103,12 +66,9 @@ int display_prompt() {
 			}
 		}
 		background_saved = 0;
-		
-		sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 		return write(1,PROMPT,PROMPT_LENGTH);
 	}
 	else {
-		sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 		return true;
 	}
 }
@@ -205,7 +165,6 @@ void execute_line() {
 	int pid;
 	int do_in_background;
 	int finished_foreground;
-	int sts;
 	command_s* commands;
 
 	write_to = -1;
@@ -243,7 +202,7 @@ void execute_line() {
 			
 			/*	Restore default signal handling	*/
 			sigaction(SIGINT, &def_sigint_act, NULL);
-			/*sigaction(SIGCHLD, &def_sigchld_act, NULL);*/
+			sigaction(SIGCHLD, &def_sigchld_act, NULL);
 			
 			/*	We don't really need it now, do we?	*/
 			sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
@@ -287,9 +246,6 @@ void execute_line() {
 		read_from = pipe_fd[READ_END];
 		write_to = -1;
 	}
-	
-	/*	BRING THEM ON!	*/
-	sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 
 	/*  Wait for children to finish	*/
 	if (!do_in_background) {
@@ -297,14 +253,13 @@ void execute_line() {
 
 		/*	Gonna catch'em all	*/
 		while (left_in_foreground) {
-			/*sigsuspend(&wait_mask);*/
-			pid = waitpid(-1,&sts,0);
-			if (pid != -1) {
-				check_pid(pid,sts);
-			}
+			sigsuspend(&wait_mask);
 		}
 	}
 	in_foreground = left_in_foreground = 0;
+
+	/*	BRING THEM ON!	*/
+	sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 }
 
 /*  Decide what to do with read input	*/
@@ -315,7 +270,7 @@ void handle_input(int l) {
 		/*  If there is a whole line in buffer, execute it	*/
 		if (input_buffer[buf_end + i] == '\n') {
 			input_buffer[buf_end + i] = '\0';
-
+			
 			execute_line();
 			
 			buf_begin = buf_end+i+1;
@@ -325,19 +280,52 @@ void handle_input(int l) {
 	buf_end += l;
 }
 
+/*	handle SIGINT	*/
+void my_sigint_handler(int a) {
+	write_string("\n");
+}
+
+/*	handle SICHLD	*/
+void my_sigchld_handler(int a) {
+	int pid;
+	int i;
+	int sts;
+	int is_bck;
+
+	/*	get pid number of finished child	*/
+	while ((pid = waitpid(-1, &sts, WNOHANG))>0) {
+		is_bck = true;
+	
+		/*	chech if foreground child was finished	*/
+		for (i=0; i<in_foreground; i++) {
+			if (children_pids[i] == pid) {
+				is_bck = false;
+				left_in_foreground--;
+				break;
+			}
+		}
+
+		/*	save iformation about background child finished	*/
+		if (is_bck && background_saved < MAX_COMMANDS) {
+			status[background_saved] = sts;
+			bckg_pid[background_saved++] = pid;
+		}
+	}
+}
+
 /*	for handling ctrl-c and SIGCHLD	*/
 void set_hadlers() {
 	struct sigaction new_sigint_act;
 	struct sigaction new_sigchld_act;
 
 	new_sigint_act.sa_handler = SIG_IGN;
-	new_sigchld_act.sa_handler = SIG_IGN;
+	new_sigchld_act.sa_handler = my_sigchld_handler;
 	
 	sigfillset(&new_sigint_act.sa_mask);
 	sigfillset(&new_sigchld_act.sa_mask);
 
 	sigaction(SIGINT, &new_sigint_act, &def_sigint_act);
-	/*sigaction(SIGCHLD, &new_sigchld_act, &def_sigchld_act);*/
+	sigaction(SIGCHLD, &new_sigchld_act, &def_sigchld_act);
 }
 
 /*	initialize variables	*/
